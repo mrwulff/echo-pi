@@ -10,9 +10,12 @@ import fauxmo
 import logging
 import time
 import RPi.GPIO as GPIO
+from websocket import create_connection
 
 from debounce_handler import debounce_handler
-
+light_socket = create_connection('ws://kevin:blink182@192.168.0.108:9999/qlcplusWS')
+a=light_socket.send("QLC+API|getChannelsValues|1|1|32")
+print (a)
 logging.basicConfig(level=logging.DEBUG)
 
 GPIO.setmode(GPIO.BCM)
@@ -56,14 +59,18 @@ class device_handler(debounce_handler):
     def trigger(self,port,state):
       print('port: %d , state: %s', port, state)
       if state == True:
-        GPIO.setup(port, GPIO.OUT)
-        GPIO.output(port,GPIO.HIGH)
-      else:
-        GPIO.setup(port, GPIO.OUT)
-        GPIO.output(port,GPIO.LOW)
+        light_socket.send("2|255")
 
+        light_socket.send("2|BUTTON|255")
+        #GPIO.setup(port, GPIO.OUT)
+        #GPIO.output(port,GPIO.HIGH)
+      else:
+        #GPIO.setup(port, GPIO.OUT)
+        #GPIO.output(port,GPIO.LOW)
+        light_socket.send("7|255")
+        light_socket.send("7|0")
     def act(self, client_address, state, name):
-        print "State", state, "on ", name, "from client @", client_address, "gpio port: ",gpio_ports[str(name)]
+        print ("State", state, "on ", name, "from client @", client_address, "gpio port: ",gpio_ports[str(name)])
         self.trigger(gpio_ports[str(name)],state)
         return True
 
@@ -87,6 +94,8 @@ if __name__ == "__main__":
             # Allow time for a ctrl-c to stop the process
             p.poll(100)
             time.sleep(0.1)
-        except Exception, e:
-            logging.critical("Critical exception: " + str(e))
+        #except Exc2eption, e:
+           # logging.critical("Critical exception: " + str(e))
+        except:
+           
             break
